@@ -15,35 +15,87 @@
  *******************************************************************************/
 package com.github.zerkseez.reflection;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public abstract class AbstractMemberInfo extends AbstractElementInfo implements HasTypeVariables {
 	private final ElementInfo declaringElement;
+	private final Cache<List<TypeVariableInfo>> typeVariables;
+	private final Cache<List<TypeVariableInfo>> declaredTypeVariables;
+	private final Cache<Integer> modifiers;
+    private final Cache<String> name;
 	
 	protected AbstractMemberInfo(final ElementInfo declaringElement) {
 		this.declaringElement = declaringElement;
+		this.typeVariables = new Cache<List<TypeVariableInfo>>(this, () -> doGetTypeVariables());
+		this.declaredTypeVariables = new Cache<List<TypeVariableInfo>>(this, () -> doGetDeclaredTypeVariables());
+		this.modifiers = new Cache<Integer>(this, () -> doGetModifiers());
+        this.name = new Cache<String>(this, () -> doGetName());
 	}
 
+	/**
+	 * Gets the declaring element of this member
+	 * 
+	 * @return The declaring element of this member
+	 */
 	public ElementInfo getDeclaringElement() {
 		return declaringElement;
 	}
 	
-	public abstract String getName();
+	/**
+	 * Gets the modifiers of this member
+	 * 
+	 * @return The modifiers of this member
+	 */
+	public final int getModifiers() {
+        return modifiers.get();
+    }
+
+    protected abstract int doGetModifiers();
+
+    /**
+     * Gets the name of this member
+     * 
+     * @return The name of this member
+     */
+    public final String getName() {
+        return name.get();
+    }
+    
+    protected abstract String doGetName();
 	
 	@Override
-	public boolean hasTypeVariables() {
+	public final boolean hasTypeVariables() {
 		return !getTypeVariables().isEmpty();
 	}
 	
 	@Override
-	public List<TypeVariableInfo> getTypeVariables() {
-		if (getDeclaringElement() instanceof HasTypeVariables) {
-			return ((HasTypeVariables)getDeclaringElement()).getTypeVariables();
-		}
-		return Collections.emptyList();
+	public final List<TypeVariableInfo> getTypeVariables() {
+	    return Collections.unmodifiableList(typeVariables.get());
 	}
+	
+	protected List<TypeVariableInfo> doGetTypeVariables() {
+	    final List<TypeVariableInfo> typeVariables = new ArrayList<TypeVariableInfo>();
+	    if (!Modifier.isStatic(getModifiers()) && getDeclaringElement() instanceof HasTypeVariables) {
+	        typeVariables.addAll(((HasTypeVariables)getDeclaringElement()).getTypeVariables());
+	    }
+	    typeVariables.addAll(getDeclaredTypeVariables());
+		return typeVariables;
+	}
+	
+	@Override
+	public final boolean hasDeclaredTypeVariables() {
+	    return !getDeclaredTypeVariables().isEmpty();
+	}
+	
+	@Override
+    public final List<TypeVariableInfo> getDeclaredTypeVariables() {
+        return Collections.unmodifiableList(declaredTypeVariables.get());
+    }
+	
+	protected abstract List<TypeVariableInfo> doGetDeclaredTypeVariables();
 
 	protected TypeInfo<?> resolveActualType(final TypeInfo<?> type) {
 		if (type instanceof TypeVariableInfo) {

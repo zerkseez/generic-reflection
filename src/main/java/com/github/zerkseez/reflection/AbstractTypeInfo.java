@@ -54,8 +54,8 @@ public abstract class AbstractTypeInfo<T extends Type> extends AbstractElementIn
     private final Cache<Boolean> isWildcardType;
     private final Cache<List<TypeInfo<?>>> extendsBounds;
     private final Cache<List<TypeInfo<?>>> superBounds;
-    private final Cache<Boolean> hasTypeVariables;
     private final Cache<List<TypeVariableInfo>> typeVariables;
+    private final Cache<List<TypeVariableInfo>> declaredTypeVariables;
     private final Cache<String> defaultStringRepresentation;
 
     public AbstractTypeInfo(final T type) {
@@ -91,8 +91,8 @@ public abstract class AbstractTypeInfo<T extends Type> extends AbstractElementIn
         this.isWildcardType = new Cache<Boolean>(this, () -> this.doGetIsWildcardType());
         this.extendsBounds = new Cache<List<TypeInfo<?>>>(this, () -> this.doGetExtendsBounds());
         this.superBounds = new Cache<List<TypeInfo<?>>>(this, () -> this.doGetSuperBounds());
-        this.hasTypeVariables = new Cache<Boolean>(this, () -> this.doGetHasTypeVariables());
         this.typeVariables = new Cache<List<TypeVariableInfo>>(this, () -> this.doGetTypeVariables());
+        this.declaredTypeVariables = new Cache<List<TypeVariableInfo>>(this, () -> this.doGetDeclaredTypeVariables());
         this.defaultStringRepresentation = new Cache<String>(this, () -> this.doGetDefaultStringRepresentation());
     }
 
@@ -330,10 +330,8 @@ public abstract class AbstractTypeInfo<T extends Type> extends AbstractElementIn
 
     @Override
     public final boolean hasTypeVariables() {
-        return hasTypeVariables.get();
+        return !getTypeVariables().isEmpty();
     }
-
-    protected abstract boolean doGetHasTypeVariables();
 
     @Override
     public final List<TypeVariableInfo> getTypeVariables() {
@@ -341,6 +339,18 @@ public abstract class AbstractTypeInfo<T extends Type> extends AbstractElementIn
     }
 
     protected abstract List<TypeVariableInfo> doGetTypeVariables();
+    
+    @Override
+    public final boolean hasDeclaredTypeVariables() {
+        return !getDeclaredTypeVariables().isEmpty();
+    }
+
+    @Override
+    public final List<TypeVariableInfo> getDeclaredTypeVariables() {
+        return Collections.unmodifiableList(declaredTypeVariables.get());
+    }
+
+    protected abstract List<TypeVariableInfo> doGetDeclaredTypeVariables();
 
     @Override
     public final String toString() {

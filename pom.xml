@@ -9,7 +9,7 @@
 	<name>Generic Reflection</name>
 	<description>Java reflection with generic resolver</description>
 	<url>https://github.com/zerkseez/generic-reflection</url>
-	<version>1.0.0</version>
+	<version>1.1.0</version>
 	<packaging>jar</packaging>
 
 	<properties>

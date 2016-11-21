@@ -235,14 +235,14 @@ public class WildcardTypeInfo extends AbstractTypeInfo<WildcardType> {
                 .map(i -> Reflection.getTypeInfo(i))
                 .collect(Collectors.toList());
     }
-
+    
     @Override
-    protected boolean doGetHasTypeVariables() {
-        return false;
+    protected List<TypeVariableInfo> doGetTypeVariables() {
+        return getDeclaredTypeVariables();
     }
 
     @Override
-    protected List<TypeVariableInfo> doGetTypeVariables() {
+    protected List<TypeVariableInfo> doGetDeclaredTypeVariables() {
         return Collections.emptyList();
     }
 

@@ -18,14 +18,18 @@ package com.github.zerkseez.reflection;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 public class FieldInfo extends AbstractMemberInfo {
     private final Field field;
+    private final Cache<TypeInfo<?>> type;
 
     public FieldInfo(final TypeInfo<?> declaringType, final Field field) {
         super(declaringType);
         this.field = field;
+        this.type = new Cache<TypeInfo<?>>(this, () -> doGetType());
     }
 
     @Override
@@ -33,26 +37,41 @@ public class FieldInfo extends AbstractMemberInfo {
         return String.format("%s|Field:%s", getDeclaringElement().getId(), getName());
     }
 
+    /**
+     * Gets the underlying java.lang.reflect.Field object
+     * 
+     * @return The underlying java.lang.reflect.Field object
+     */
     public Field getField() {
         return field;
     }
-
+    
     @Override
-    protected AnnotatedElement getAnnotatedElement() {
-        return getField();
+    protected int doGetModifiers() {
+        return getField().getModifiers();
     }
-
-    @Override
-    public String getName() {
-        return getField().getName();
-    }
-
+    
+    /**
+     * Gets the type of this field
+     * 
+     * @return The type of this field
+     */
     public TypeInfo<?> getType() {
+        return type.get();
+    }
+    
+    protected TypeInfo<?> doGetType() {
         return resolveActualType(Reflection.getTypeInfo(getField().getGenericType()));
     }
 
-    public int getModifiers() {
-        return field.getModifiers();
+    @Override
+    protected String doGetName() {
+        return getField().getName();
+    }
+    
+    @Override
+    protected List<TypeVariableInfo> doGetDeclaredTypeVariables() {
+        return Collections.emptyList();
     }
 
     @Override
@@ -71,6 +90,11 @@ public class FieldInfo extends AbstractMemberInfo {
         sb.append(' ');
         sb.append(getName());
         return sb.toString();
+    }
+    
+    @Override
+    protected AnnotatedElement getAnnotatedElement() {
+        return getField();
     }
 
     public static class FieldInfoComparator implements Comparator<FieldInfo> {

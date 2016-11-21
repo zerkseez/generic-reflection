@@ -214,14 +214,14 @@ public class TypeVariableInfo extends AbstractTypeInfo<TypeVariable<?>> {
     protected List<TypeInfo<?>> doGetSuperBounds() {
         return Collections.emptyList();
     }
-
+    
     @Override
-    protected boolean doGetHasTypeVariables() {
-        return false;
+    protected List<TypeVariableInfo> doGetTypeVariables() {
+        return getDeclaredTypeVariables();
     }
 
     @Override
-    protected List<TypeVariableInfo> doGetTypeVariables() {
+    protected List<TypeVariableInfo> doGetDeclaredTypeVariables() {
         return Collections.emptyList();
     }
 
@@ -235,8 +235,8 @@ public class TypeVariableInfo extends AbstractTypeInfo<TypeVariable<?>> {
         if (getTypeVariableValue() == null) {
             final StringBuilder sb = new StringBuilder();
             sb.append(getTypeVariableName());
-            if (!context.isTypeVariableDefined(getTypeVariableName())) {
-                context.defineTypeVariable(getTypeVariableName());
+            if (!context.isTypeVariableDefined(getId())) {
+                context.defineTypeVariable(getId());
                 sb.append(renderSuperAndExtendsBounds(context, includeTypeVariables));
             }
             return sb.toString();

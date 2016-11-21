@@ -196,12 +196,12 @@ public class GenericArrayInfo extends AbstractTypeInfo<GenericArrayType> {
     }
 
     @Override
-    protected boolean doGetHasTypeVariables() {
-        return false;
-    }
-
-    @Override
     protected List<TypeVariableInfo> doGetTypeVariables() {
+        return getDeclaredTypeVariables();
+    }
+    
+    @Override
+    protected List<TypeVariableInfo> doGetDeclaredTypeVariables() {
         return Collections.emptyList();
     }
 

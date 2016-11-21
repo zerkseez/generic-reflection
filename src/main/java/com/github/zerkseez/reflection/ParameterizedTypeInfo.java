@@ -214,12 +214,12 @@ public class ParameterizedTypeInfo extends AbstractClassInfo<ParameterizedType> 
     }
 
     @Override
-    protected boolean doGetHasTypeVariables() {
-        return classInfo.hasTypeVariables();
-    }
-
-    @Override
     protected List<TypeVariableInfo> doGetTypeVariables() {
+        return getDeclaredTypeVariables();
+    }
+    
+    @Override
+    protected List<TypeVariableInfo> doGetDeclaredTypeVariables() {
         if (typeVariableSubstitutes != null) {
             return typeVariableSubstitutes;
         }
