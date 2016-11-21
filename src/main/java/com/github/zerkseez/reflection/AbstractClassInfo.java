@@ -85,8 +85,9 @@ public abstract class AbstractClassInfo<T extends Type> extends AbstractTypeInfo
         }
         else {
             final String packagePrefix = getPackageName().isEmpty() ? "" : String.format("%s.", getPackageName());
-            final String canonicalNameExPackageName = getFullCanonicalName().substring(packagePrefix.length());
-            final String parts[] = canonicalNameExPackageName.split("\\.");
+            final String fullName = (getFullCanonicalName() == null) ? getFullBinaryName() : getFullCanonicalName();
+            final String nameExPackageName = fullName.substring(packagePrefix.length());
+            final String parts[] = nameExPackageName.split("\\.");
 
             int i = parts.length;
             boolean imported = false;
@@ -100,7 +101,7 @@ public abstract class AbstractClassInfo<T extends Type> extends AbstractTypeInfo
                 }
             }
             if (!imported) {
-                sb.append(getFullCanonicalName());
+                sb.append(fullName);
             }
 
             if (includeTypeVariables && hasTypeVariables()) {

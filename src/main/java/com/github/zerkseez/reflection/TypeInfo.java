@@ -312,11 +312,11 @@ public interface TypeInfo<T extends Type> extends ElementInfo, HasTypeVariables 
      * @author xerxes
      */
     public static interface ToStringContext {
-        boolean isImported(String canonicalClassName);
+        boolean isImported(String className);
 
-        boolean isTypeVariableDefined(String typeVariableName);
+        boolean isTypeVariableDefined(String typeVariableId);
 
-        void defineTypeVariable(String typeVariableName);
+        void defineTypeVariable(String typeVariableId);
     }
 
     /**
@@ -328,21 +328,21 @@ public interface TypeInfo<T extends Type> extends ElementInfo, HasTypeVariables 
         private final Set<String> definedTypeVariables = new HashSet<String>();
 
         @Override
-        public boolean isImported(final String canonicalClassName) {
+        public boolean isImported(final String className) {
             return false;
         }
 
         @Override
-        public boolean isTypeVariableDefined(final String typeVariableName) {
-            if (definedTypeVariables.contains(typeVariableName)) {
+        public boolean isTypeVariableDefined(final String typeVariableId) {
+            if (definedTypeVariables.contains(typeVariableId)) {
                 return true;
             }
             return false;
         }
 
         @Override
-        public void defineTypeVariable(final String typeVariableName) {
-            definedTypeVariables.add(typeVariableName);
+        public void defineTypeVariable(final String typeVariableId) {
+            definedTypeVariables.add(typeVariableId);
         }
     }
 }

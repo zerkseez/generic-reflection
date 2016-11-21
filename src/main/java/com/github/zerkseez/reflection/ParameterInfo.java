@@ -26,14 +26,29 @@ public class ParameterInfo {
         this.actualType = actualType;
     }
 
+    /**
+     * Gets the underlying java.lang.reflect.Parameter object
+     * 
+     * @return The underlying java.lang.reflect.Parameter object
+     */
     public Parameter getParameter() {
         return parameter;
     }
 
+    /**
+     * Gets the name of this parameter
+     * 
+     * @return The name of this parameter
+     */
     public String getName() {
         return getParameter().getName();
     }
 
+    /**
+     * Gets the type of this parameter
+     * 
+     * @return The type of this parameter
+     */
     public TypeInfo<?> getType() {
         return actualType;
     }

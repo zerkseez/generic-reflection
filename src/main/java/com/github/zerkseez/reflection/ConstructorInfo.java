@@ -15,68 +15,34 @@
  *******************************************************************************/
 package com.github.zerkseez.reflection;
 
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class ConstructorInfo extends AbstractMemberInfo {
-    private final Constructor<?> constructor;
-
+public class ConstructorInfo extends AbstractExecutableInfo<Constructor<?>> {
     public ConstructorInfo(final TypeInfo<?> declaringElement, final Constructor<?> constructor) {
-        super(declaringElement);
-        this.constructor = constructor;
+        super(declaringElement, constructor);
     }
 
     @Override
     protected String doGetId() {
         return String.format("%s|Constructor", getDeclaringElement().getId());
     }
-
-    public Constructor<?> getConstructor() {
-        return constructor;
+    
+    @Override
+    protected String doGetName() {
+        return ((TypeInfo<?>)getDeclaringElement()).getSimpleName();
     }
 
     @Override
-    protected AnnotatedElement getAnnotatedElement() {
-        return getConstructor();
-    }
-
-    public int getModifiers() {
-        return getConstructor().getModifiers();
-    }
-
-    @Override
-    public String getName() {
-        return ((TypeInfo<?>) getDeclaringElement()).getSimpleName();
-    }
-
-    public List<ParameterInfo> getParameters() {
-        return Arrays.stream(getConstructor().getParameters())
-                .map(i -> new ParameterInfo(
-                        i, resolveActualType(Reflection.getTypeInfo(i.getParameterizedType()))
-                ))
-                .collect(Collectors.toList());
-    }
-
-    public List<TypeInfo<?>> getExceptionTypes() {
-        return Arrays.stream(getConstructor().getGenericExceptionTypes())
-                .map(i -> Reflection.getTypeInfo(i))
-                .collect(Collectors.toList());
-    }
-
-    public String getSignature() {
+    protected String doGetSignature() {
         final TypeInfo.ToStringContext context = new TypeInfo.DefaultToStringContext();
         final StringBuilder sb = new StringBuilder();
-        if (getConstructor().getTypeParameters().length > 0) {
+        if (hasDeclaredTypeVariables()) {
             sb.append('<');
             sb.append(ReflectionUtils.joinStrings(", ",
-                    Arrays.stream(getConstructor().getTypeParameters())
-                            .map(i -> Reflection.getTypeInfo(i).toString(context, true))
+                    getDeclaredTypeVariables().stream()
+                            .map(i -> i.toString(context, true))
                             .iterator()
             ));
             sb.append("> ");
@@ -92,21 +58,19 @@ public class ConstructorInfo extends AbstractMemberInfo {
     }
 
     @Override
-    public List<TypeVariableInfo> getTypeVariables() {
-        final List<TypeVariableInfo> typeVariables = new ArrayList<TypeVariableInfo>(super.getTypeVariables());
-        typeVariables.addAll(
-                Arrays.stream(getConstructor().getTypeParameters())
-                        .map(i -> new TypeVariableInfo(i))
-                        .collect(Collectors.toList())
-        );
-        return Collections.unmodifiableList(typeVariables);
-    }
-
-    @Override
-    public String toString() {
+    protected String doGetDefaultStringRepresentation() {
         final TypeInfo.ToStringContext context = new TypeInfo.DefaultToStringContext();
-        if (getDeclaringElement() instanceof TypeInfo) {
-            ((TypeInfo<?>) getDeclaringElement()).toString(context, true);
+        for (TypeVariableInfo typeVariable : getTypeVariables()) {
+            boolean isDirectlyDeclared = false;
+            for (TypeVariableInfo declaredTypeVariable : getDeclaredTypeVariables()) {
+                if (typeVariable.getId().equals(declaredTypeVariable.getId())) {
+                    isDirectlyDeclared = true;
+                    break;
+                }
+            }
+            if (!isDirectlyDeclared) {
+                context.defineTypeVariable(typeVariable.getId());
+            }
         }
 
         final StringBuilder sb = new StringBuilder();
@@ -116,11 +80,11 @@ public class ConstructorInfo extends AbstractMemberInfo {
             sb.append(' ');
         }
 
-        if (getConstructor().getTypeParameters().length > 0) {
+        if (hasDeclaredTypeVariables()) {
             sb.append('<');
             sb.append(ReflectionUtils.joinStrings(", ",
-                    Arrays.stream(getConstructor().getTypeParameters())
-                            .map(i -> new TypeVariableInfo(i).toString(context, true))
+                    getDeclaredTypeVariables().stream()
+                            .map(i -> i.toString(context, true))
                             .iterator()
             ));
             sb.append("> ");

@@ -15,22 +15,17 @@
  *******************************************************************************/
 package com.github.zerkseez.reflection;
 
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class MethodInfo extends AbstractMemberInfo {
-    private final Method method;
-
-    public MethodInfo(final ElementInfo declaringElement, final Method method) {
-        super(declaringElement);
-        this.method = method;
+public class MethodInfo extends AbstractExecutableInfo<Method> {
+    private final Cache<TypeInfo<?>> returnType;
+    
+    public MethodInfo(final TypeInfo<?> declaringElement, final Method method) {
+        super(declaringElement, method);
+        this.returnType = new Cache<TypeInfo<?>>(this, () -> doGetReturnType());
     }
 
     @Override
@@ -38,50 +33,33 @@ public class MethodInfo extends AbstractMemberInfo {
         return String.format("%s|Method:%s", getDeclaringElement().getId(), getName());
     }
 
-    public Method getMethod() {
-        return method;
+    /**
+     * Gets the return type of this method
+     * 
+     * @return The return type of this method
+     */
+    public final TypeInfo<?> getReturnType() {
+        return returnType.get();
+    }
+    
+    protected TypeInfo<?> doGetReturnType() {
+        return resolveActualType(Reflection.getTypeInfo(getExecutable().getGenericReturnType()));
+    }
+    
+    @Override
+    protected String doGetName() {
+        return getExecutable().getName();
     }
 
     @Override
-    protected AnnotatedElement getAnnotatedElement() {
-        return getMethod();
-    }
-
-    public int getModifiers() {
-        return getMethod().getModifiers();
-    }
-
-    public TypeInfo<?> getReturnType() {
-        return resolveActualType(Reflection.getTypeInfo(getMethod().getGenericReturnType()));
-    }
-
-    @Override
-    public String getName() {
-        return getMethod().getName();
-    }
-
-    public List<ParameterInfo> getParameters() {
-        return Arrays.stream(getMethod().getParameters())
-                .map(i -> new ParameterInfo(
-                        i, resolveActualType(Reflection.getTypeInfo(i.getParameterizedType()))
-                ))
-                .collect(Collectors.toList());
-    }
-
-    public List<TypeInfo<?>> getExceptionTypes() {
-        return Arrays.stream(getMethod().getGenericExceptionTypes())
-                .map(i -> Reflection.getTypeInfo(i))
-                .collect(Collectors.toList());
-    }
-
-    public String getSignature() {
+    protected String doGetSignature() {
         final TypeInfo.ToStringContext context = new TypeInfo.DefaultToStringContext();
         final StringBuilder sb = new StringBuilder();
-        if (getMethod().getTypeParameters().length > 0) {
+        if (hasDeclaredTypeVariables()) {
             sb.append('<');
             sb.append(ReflectionUtils.joinStrings(", ",
-                    Arrays.stream(getMethod().getTypeParameters())
-                            .map(i -> Reflection.getTypeInfo(i).toString(context, true))
+                    getDeclaredTypeVariables().stream()
+                            .map(i -> i.toString(context, true))
                             .iterator()
             ));
             sb.append("> ");
@@ -97,21 +75,19 @@ public class MethodInfo extends AbstractMemberInfo {
     }
 
     @Override
-    public List<TypeVariableInfo> getTypeVariables() {
-        final List<TypeVariableInfo> typeVariables = new ArrayList<TypeVariableInfo>(super.getTypeVariables());
-        typeVariables.addAll(
-                Arrays.stream(getMethod().getTypeParameters())
-                        .map(i -> new TypeVariableInfo(i))
-                        .collect(Collectors.toList())
-        );
-        return Collections.unmodifiableList(typeVariables);
-    }
-
-    @Override
-    public String toString() {
+    protected String doGetDefaultStringRepresentation() {
         final TypeInfo.ToStringContext context = new TypeInfo.DefaultToStringContext();
-        if (getDeclaringElement() instanceof TypeInfo) {
-            ((TypeInfo<?>) getDeclaringElement()).toString(context, true);
+        for (TypeVariableInfo typeVariable : getTypeVariables()) {
+            boolean isDirectlyDeclared = false;
+            for (TypeVariableInfo declaredTypeVariable : getDeclaredTypeVariables()) {
+                if (typeVariable.getId().equals(declaredTypeVariable.getId())) {
+                    isDirectlyDeclared = true;
+                    break;
+                }
+            }
+            if (!isDirectlyDeclared) {
+                context.defineTypeVariable(typeVariable.getId());
+            }
         }
 
         final StringBuilder sb = new StringBuilder();
@@ -121,11 +97,11 @@ public class MethodInfo extends AbstractMemberInfo {
             sb.append(' ');
         }
 
-        if (getMethod().getTypeParameters().length > 0) {
+        if (hasDeclaredTypeVariables()) {
             sb.append('<');
             sb.append(ReflectionUtils.joinStrings(", ",
-                    Arrays.stream(getMethod().getTypeParameters())
-                            .map(i -> new TypeVariableInfo(i).toString(context, true))
+                    getDeclaredTypeVariables().stream()
+                            .map(i -> i.toString(context, true))
                             .iterator()
             ));
             sb.append("> ");
@@ -160,7 +136,7 @@ public class MethodInfo extends AbstractMemberInfo {
         }
         return sb.toString();
     }
-
+    
     public static class MethodInfoComparator implements Comparator<MethodInfo> {
         @Override
         public int compare(final MethodInfo a, final MethodInfo b) {

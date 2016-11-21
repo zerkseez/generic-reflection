@@ -18,6 +18,32 @@ package com.github.zerkseez.reflection;
 import java.util.List;
 
 public interface HasTypeVariables {
+    /**
+     * Checks if this object has type variables
+     * 
+     * @return true if this object has type variables; false otherwise
+     */
     boolean hasTypeVariables();
+
+    /**
+     * Gets all type variables, including inherited ones
+     * 
+     * @return All type variables, including inherited ones
+     */
     List<TypeVariableInfo> getTypeVariables();
+
+    /**
+     * Checks if this object has directly declared type variables
+     * 
+     * @return true if this object has directly declared type variables; false
+     *         otherwise
+     */
+    boolean hasDeclaredTypeVariables();
+
+    /**
+     * Gets all directly declared type variables
+     * 
+     * @return All directly declared type variables
+     */
+    List<TypeVariableInfo> getDeclaredTypeVariables();
 }

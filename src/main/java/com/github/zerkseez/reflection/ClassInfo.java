@@ -211,16 +211,16 @@ public class ClassInfo extends AbstractClassInfo<Class<?>> {
     }
 
     @Override
-    protected boolean doGetHasTypeVariables() {
-        return !getTypeVariables().isEmpty();
-    }
-
-    @Override
     protected List<TypeVariableInfo> doGetTypeVariables() {
+        return getDeclaredTypeVariables();
+    }
+    
+    @Override
+    protected List<TypeVariableInfo> doGetDeclaredTypeVariables() {
         if (typeVariableSubstitutes != null) {
             return typeVariableSubstitutes;
         }
-
+        
         return Arrays.stream(getType().getTypeParameters())
                 .map(i -> new TypeVariableInfo(i))
                 .collect(Collectors.toList());
